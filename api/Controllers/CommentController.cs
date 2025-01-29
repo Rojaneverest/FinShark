@@ -5,9 +5,11 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using api.Dtos.Comment;
+using api.Helpers;
 using api.Interfaces;
 using api.Mappers;
 using api.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Logging;
@@ -29,12 +31,17 @@ namespace api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [Authorize]
+        public async Task<IActionResult> GetAll([FromQuery] CommentQueryObject queryObject)
         {
-            var comments = await _commentRepository.GetAllAsync();
-            var commentDto = comments.Select(s => s.ToCommentDto());
-            return Ok(commentDto);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
+            var comments = await _commentRepository.GetAllAsync(queryObject);
+
+            var commentDto = comments.Select(s => s.ToCommentDto());
+
+            return Ok(commentDto);
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById([FromRoute] int id)
